@@ -1,3 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "PlatformDefinitions.h"
 #include "GXDLMSServerLN.h"
 #include "GXDLMSBase.h"
@@ -76,25 +86,21 @@ int main(int argc, char* argv[])
 
 int init_dlms(const char* path)
 {
-    strcpy_s(DATAFILE, sizeof(DATAFILE), path);
+    strcpy(DATAFILE, path);
     char* p = strrchr(DATAFILE, '\\');
     *p = '\0';
-    strcpy_s(IMAGEFILE, DATAFILE);
-    strcat_s(IMAGEFILE, "\\empty.bin");
-    strcat_s(DATAFILE, "\\data.csv");
+    strcpy(IMAGEFILE, DATAFILE);
+    strcat(IMAGEFILE, "\\empty.bin");
+    strcat(DATAFILE, "\\data.csv");
 
     int ret = 0;
     
     char hostname[65] = { 0 };
     unsigned long hlen = 64;
-    GetComputerNameA(hostname, &hlen);
+    gethostname(hostname, sizeof(hostname));
     hostname[8] = 0;
 
-    char systemname[9] = { 0 };
-    strcpy(systemname, "MDTK1234");
-
-    //LNServer = new CGXDLMSServerLN(new CGXDLMSAssociationLogicalName(), new CGXDLMSIecHdlcSetup(), hostname);
-    LNServer = new CGXDLMSServerLN(new CGXDLMSAssociationLogicalName(), new CGXDLMSIecHdlcSetup(), systemname);
+    LNServer = new CGXDLMSServerLN(new CGXDLMSAssociationLogicalName(), new CGXDLMSIecHdlcSetup(), hostname);
 
     if ((ret = LNServer->Init()) != 0)
     {

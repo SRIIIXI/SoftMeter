@@ -1,10 +1,6 @@
 
 #pragma once
 
-#if defined(_WIN32) || defined(_WIN64)//Windows includes
-#include <Winsock.h> //Add support for sockets
-#endif
-
 #include "GXDLMSSecureServer.h"
 #include "GXDLMSSecuritySetup.h"
 #include "GXByteBuffer.h"

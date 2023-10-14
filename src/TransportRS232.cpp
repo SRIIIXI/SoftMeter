@@ -1,6 +1,8 @@
 #include "PlatformDefinitions.h"
-#include "DlmsServer.h"
+#include "SoftMeter.h"
+#include "TransportRS232.h"
 
+/*
 HANDLE			m_hComPort;
 OVERLAPPED		m_osWrite;
 OVERLAPPED		m_osReader;
@@ -324,3 +326,40 @@ bool rs232_close()
 
     return true;
 }
+*/
+
+TransportRS232::TransportRS232() : Transport()
+{
+
+}
+
+TransportRS232::~TransportRS232()
+{
+
+}
+
+bool TransportRS232::Initialize(const char* args...)
+{
+    return false;
+}
+
+bool TransportRS232::Open()
+{
+    return false;
+}
+
+bool TransportRS232::Close()
+{
+    return false;
+}
+
+int TransportRS232::Write()
+{
+    return 0;
+}
+
+int TransportRS232::Read()
+{
+    return 0;
+}
+

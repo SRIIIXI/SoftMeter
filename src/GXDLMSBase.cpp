@@ -1,8 +1,14 @@
 #include <stdio.h>
-#include <Winsock.h> //Add support for sockets
 #include <time.h>
-#include <process.h>//Add support for threads
-
+#include <pthread.h>//Add support for threads
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include "GXDLMSBase.h"
 
 #include "GXTime.h"
@@ -544,7 +550,7 @@ void GetProfileGenericDataByEntry(CGXDLMSProfileGeneric* p, long index, long cou
 
         if (f != NULL)
         {
-            while ((len = fscanf_s(f, "%d/%d/%d %d:%d:%d;%d", &month, &day, &year, &hour, &minute, &second, &value)) != -1)
+            while ((len = fscanf(f, "%d/%d/%d %d:%d:%d;%d", &month, &day, &year, &hour, &minute, &second, &value)) != -1)
             {
                 // Skip row
                 if (index > 0)
@@ -600,7 +606,7 @@ void GetProfileGenericDataByRange(CGXDLMSValueEventArg* e)
 
     if (f != NULL)
     {
-        while ((len = fscanf_s(f, "%d/%d/%d %d:%d:%d;%d", &month, &day, &year, &hour, &minute, &second, &value)) != -1)
+        while ((len = fscanf(f, "%d/%d/%d %d:%d:%d;%d", &month, &day, &year, &hour, &minute, &second, &value)) != -1)
         {
             CGXDateTime tm(2000 + year, month, day, hour, minute, second, 0, 0x8000);
             if (tm.CompareTo(end.dateTime) > 0)
@@ -830,8 +836,8 @@ void HandleImageTransfer(CGXDLMSValueEventArg* e)
         ++p;
         *p = '\0';
 
-        strncat_s(IMAGEFILE, (char*)e->GetParameters().Arr[0].byteArr, (int)e->GetParameters().Arr[0].GetSize());
-        strcat_s(IMAGEFILE, ".bin");
+        strncat(IMAGEFILE, (char*)e->GetParameters().Arr[0].byteArr, (int)e->GetParameters().Arr[0].GetSize());
+        strcat(IMAGEFILE, ".bin");
 
         printf("Updating image %s Size: %d\n", IMAGEFILE, imageSize);
 
@@ -952,9 +958,9 @@ int Connect(const char* address, int port, int& s)
         hostent* Hostent = gethostbyname(address);
         if (Hostent == NULL)
         {
-            int err = WSAGetLastError();
+            int err = errno;
+            close(s);
 
-            closesocket(s);
             return err;
         };
         add.sin_addr = *(in_addr*)(void*)Hostent->h_addr_list[0];
@@ -994,7 +1000,8 @@ int CGXDLMSBase::SendPush(CGXDLMSPushSetup* target)
                 break;
             }
         }
-        closesocket(socket);
+
+        close(socket);
     }
     return ret;
 }
@@ -1058,7 +1065,7 @@ void Capture(CGXDLMSProfileGeneric* pg)
             {
                 char tmp[20];
                 // Generate random value here.
-                sprintf_s(tmp, "%d", ++cnt);
+                sprintf(tmp, "%d", ++cnt);
 
                 value = tmp;
             }

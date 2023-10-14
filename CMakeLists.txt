@@ -6,11 +6,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(WIN32)
-    link_libraries(ws2_32 wsock32 userenv)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif(WIN32)
-
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(PROJECT_SOURCE_DIR ./dlms/src)
 set(PROJECT_HEADER_DIR ./dlms/include)
@@ -335,6 +330,10 @@ add_executable(Softmeter ${SOURCE} ${HEADERS}
     ./include/SoftMeter.h
     ./include/GXDLMSBase.h
     ./include/GXDLMSServerLN.h
+    ./include/Transport.h
+    ./include/TransportRS232.h
+    ./include/TransportBLE.h
+    ./include/TransportTCP.h
     ./src/GXDLMSBase.cpp
     ./src/TransportRS232.cpp
     ./src/TransportBLE.cpp

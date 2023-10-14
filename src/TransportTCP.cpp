@@ -1,10 +1,10 @@
 #include "PlatformDefinitions.h"
-#include "DlmsServer.h"
+#include "SoftMeter.h"
+#include "TransportTCP.h"
 
 #define DEFAULT_BUFLEN 4096
 #define DEFAULT_PORT "4059"
 
-WSADATA wsaData;
 int iResult;
 
 SOCKET ListenSocket = INVALID_SOCKET;
@@ -22,17 +22,23 @@ void tcp_run_client_loop();
 bool tcp_transmit_buffer(CGXByteBuffer& buffer);
 bool tcp_receive_buffer(CGXByteBuffer& buffer);
 
-void start_tcp(const char *path, int port)
+TransportTCP::TransportTCP() : Transport()
 {
-    // Initialize Winsock
-    iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (iResult != 0)
-    {
-        printf("WSAStartup failed with error: %d\n", iResult);
-        return;
-    }
 
-    ZeroMemory(&hints, sizeof(hints));
+}
+
+TransportTCP::~TransportTCP()
+{
+
+}
+
+
+bool TransportTCP::Initialize(const char* args...)
+{
+    char* host = nullptr;
+    int port = 0;
+
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
@@ -44,8 +50,7 @@ void start_tcp(const char *path, int port)
     if ( iResult != 0 )
     {
         printf("getaddrinfo failed with error: %d\n", iResult);
-        WSACleanup();
-        return;
+        return false;
     }
 
     // Create a SOCKET for the server to listen for client connections.
@@ -53,10 +58,9 @@ void start_tcp(const char *path, int port)
 
     if (ListenSocket == INVALID_SOCKET)
     {
-        printf("socket failed with error: %d\n", WSAGetLastError());
+        printf("socket failed with error: %d\n", errno);
         freeaddrinfo(result);
-        WSACleanup();
-        return;
+        return false;
     }
 
     // Setup the TCP listening socket
@@ -64,11 +68,10 @@ void start_tcp(const char *path, int port)
 
     if (iResult == SOCKET_ERROR)
     {
-        printf("bind failed with error: %d\n", WSAGetLastError());
+        printf("bind failed with error: %d\n", errno);
         freeaddrinfo(result);
-        closesocket(ListenSocket);
-        WSACleanup();
-        return;
+        close(ListenSocket);
+        return false;
     }
 
     freeaddrinfo(result);
@@ -76,13 +79,12 @@ void start_tcp(const char *path, int port)
     iResult = listen(ListenSocket, SOMAXCONN);
     if (iResult == SOCKET_ERROR)
     {
-        printf("listen failed with error: %d\n", WSAGetLastError());
-        closesocket(ListenSocket);
-        WSACleanup();
-        return;
+        printf("listen failed with error: %d\n", errno);
+        close(ListenSocket);
+        return false;
     }
 
-    init_dlms(path);
+    //init_dlms(path);
 
     std::cout << "DLMS Simulator over TCP port " << port << " started" << std::endl << std::flush;
     std::cout << "###" << std::endl << std::flush;
@@ -93,10 +95,9 @@ void start_tcp(const char *path, int port)
         ClientSocket = accept(ListenSocket, NULL, NULL);
         if (ClientSocket == INVALID_SOCKET)
         {
-            printf("accept failed with error: %d\n", WSAGetLastError());
-            closesocket(ListenSocket);
-            WSACleanup();
-            return;
+            printf("accept failed with error: %d\n", errno);
+            close(ListenSocket);
+            return false;
         }
         else
         {
@@ -107,10 +108,29 @@ void start_tcp(const char *path, int port)
     }
 
     // No longer need server socket
-    closesocket(ListenSocket);
-    WSACleanup();
+    close(ListenSocket);
 
-    return;
+    return true;
+}
+
+bool TransportTCP::Open()
+{
+    return false;
+}
+
+bool TransportTCP::Close()
+{
+    return false;
+}
+
+int TransportTCP::Write()
+{
+    return false;
+}
+
+int TransportTCP::Read()
+{
+    return false;
 }
 
 void tcp_run_client_loop()
@@ -188,7 +208,7 @@ bool tcp_receive_buffer(CGXByteBuffer& buffer)
     char eop = 0x7E;
 
     int ctr = 0;
-    ZeroMemory(recvbuf, sizeof(recvbuf));
+    memset(recvbuf, 0, sizeof(recvbuf));
 
     //while(true)
     //{
